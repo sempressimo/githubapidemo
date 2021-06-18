@@ -53,7 +53,7 @@ export default {
               axios.get(user.url, {
                 headers: {
                   Authorization:
-                    "token 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",
+                    "token {GITHUB_TOKEN_HERE}",
                 },
               })
             );
