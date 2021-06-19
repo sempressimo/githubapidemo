@@ -4,7 +4,7 @@
     <v-app-bar app> Github Candidates Search </v-app-bar>
     <v-main>
       <v-container fluid style="padding: 35px">
-        <SearchGitRepos @git-search="searchGitHub" :results="results" />
+        <SearchGitRepos />
       </v-container>
     </v-main>
 
@@ -24,7 +24,6 @@
 
 <script>
 import SearchGitRepos from "./components/SearchGitRepos.vue";
-import axios from "axios";
 
 export default {
   name: "App",
@@ -36,46 +35,5 @@ export default {
       results: [],
     };
   },
-  methods: {
-    fetchUsers(term) {
-      this.results = [];
-      if (term == "") {
-        return;
-      }
-
-      this.loading = true;
-      let detailPromises = [];
-      axios
-        .get("https://api.github.com/search/users?q=".concat(term))
-        .then((response) => {
-          response.data.items.forEach((user) => {
-            detailPromises.push(
-              axios.get(user.url, {
-                headers: {
-                  Authorization:
-                    "token {GITHUB_TOKEN_HERE}",
-                },
-              })
-            );
-          });
-
-          // wait unitl all user data is fetched
-          Promise.all(detailPromises).then((allResults) => {
-            allResults.forEach((user) => {
-              this.results.push(user.data);
-            });
-            this.loading = false;
-          });
-        })
-        .catch((error) => {
-          console.log(error);
-          return null;
-        });
-    },
-    searchGitHub(term) {
-      this.fetchUsers(term);
-    },
-  },
-  created() {},
 };
 </script>
