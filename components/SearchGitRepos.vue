@@ -5,6 +5,7 @@
         <v-text-field
           id="txtSearchBox"
           v-model="SearchBoxText"
+          v-on:keyup.enter="onEnter"
           dense
           outlined
           label="Enter Name or Email"
@@ -24,7 +25,8 @@
           :headers="headers"
           :items="results"
           :items-per-page="10"
-          loading-text="Loading... Please wait"
+          :loading="this.isLoading"
+          :loading-text="loadingText"
         >
           <template v-slot:item.login="{ item }">
             <a target="_blank" :href="userProfileUrl(item.login)">{{
@@ -43,14 +45,57 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "SearchGitRepos",
-  props: {
-    results: Array,
-  },
+  computed: {},
   methods: {
+    fetchUsers(term) {
+      if (term == "") {
+        return;
+      }
+
+      let tempResults = [];
+      this.isLoading = true;
+      let detailPromises = [];
+
+      axios
+        .get("https://api.github.com/search/users?q=".concat(term))
+        .then((response) => {
+          response.data.items.forEach((user) => {
+            detailPromises.push(
+              axios.get(user.url, {
+                headers: {
+                  Authorization:
+                    "token  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",
+                },
+              })
+            );
+          });
+
+          // wait unitl all user data is fetched
+          Promise.all(detailPromises).then((allResults) => {
+            allResults.forEach((user) => {
+              tempResults.push(user.data);
+            });
+            this.isLoading = false;
+            this.results = tempResults;
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          return null;
+        });
+    },
+    searchGitHubUsers() {
+      this.fetchUsers(this.SearchBoxText);
+    },
+    onEnter: function () {
+      this.searchGitHubUsers();
+    },
     onSearchClick() {
-      this.$emit("git-search", this.SearchBoxText);
+      this.searchGitHubUsers();
     },
     userProfileUrl(login) {
       return "https://github.com/".concat(login);
@@ -58,7 +103,10 @@ export default {
   },
   data() {
     return {
+      results: [],
       SearchBoxText: "",
+      isLoading: false,
+      loadingText: "Please wait...",
       headers: [
         {
           text: "Login",
