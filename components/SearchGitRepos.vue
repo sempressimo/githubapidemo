@@ -68,7 +68,7 @@ export default {
               axios.get(user.url, {
                 headers: {
                   Authorization:
-                    "token  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",
+                    "token  {TOKEN_HERE}",
                 },
               })
             );
